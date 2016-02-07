@@ -7,9 +7,14 @@ from Quartz.CoreGraphics import kCGEventLeftMouseDown
 from Quartz.CoreGraphics import kCGEventLeftMouseUp
 from Quartz.CoreGraphics import kCGMouseButtonLeft
 from Quartz.CoreGraphics import kCGHIDEventTap
-posx = float(sys.argv[1])
-posy = float(sys.argv[2])
-
+# posx = float(sys.argv[1])
+# posy = float(sys.argv[2])
+def mousedown(posx, posy):
+    mouseEvent(kCGEventMouseMoved, posx,posy);
+    mouseEvent(kCGEventLeftMouseDown, posx,posy);
+def mouseup(posx, posy):
+    mouseEvent(kCGEventMouseMoved, posx,posy);
+    mouseEvent(kCGEventLeftMouseUp, posx,posy);
 def mouseEvent(type, posx, posy):
         theEvent = CGEventCreateMouseEvent(
                     None, 
@@ -23,11 +28,13 @@ def mousemove(posx,posy):
 
 def mouseclick(posx,posy):
         # uncomment this line if you want to force the mouse 
-        # to MOVE to the click location first (I found it was not necessary).
+        # took-Pro-2:VRInterface davidsun$ Davids-MacBook-Pro-2:VRInterface davidsun$ Davids-MacBook-Pro-2:VRInterface davidsun$ -bash: -rw-r--r--@:: command not found
         mouseEvent(kCGEventMouseMoved, posx,posy);
         mouseEvent(kCGEventLeftMouseDown, posx,posy);
         mouseEvent(kCGEventLeftMouseUp, posx,posy);
-mousemove(posx, posy)
+for a in range(20):
+    mousedown(100, 200)
+    mouseup(100, 200)
 # while True:
 #     for x in range(0, 1500, 100):
 #         for y in range(0, 900, 5):
