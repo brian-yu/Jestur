@@ -1,20 +1,63 @@
-################################################################################
-# Copyright (C) 2012-2013 Leap Motion, Inc. All rights reserved.               #
-# Leap Motion proprietary and confidential. Not for distribution.              #
-# Use subject to the terms of the Leap Motion SDK Agreement available at       #
-# https://developer.leapmotion.com/sdk_agreement, or another agreement         #
-# between Leap Motion and you, your company or other organization.             #
-################################################################################
-
 import Leap, sys, thread, time
+from Quartz.CoreGraphics import CGEventCreateMouseEvent
+from Quartz.CoreGraphics import CGEventPost
+from Quartz.CoreGraphics import kCGEventMouseMoved
+from Quartz.CoreGraphics import kCGEventLeftMouseDown
+from Quartz.CoreGraphics import kCGEventLeftMouseDown
+from Quartz.CoreGraphics import kCGEventLeftMouseUp
+from Quartz.CoreGraphics import kCGMouseButtonLeft
+from Quartz.CoreGraphics import kCGHIDEventTap
+
+from math import sqrt, pow
+
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
+canClick = True
+
+def mouseEvent(type, posx, posy):
+        theEvent = CGEventCreateMouseEvent(
+                    None, 
+                    type, 
+                    (posx,posy), 
+                    kCGMouseButtonLeft)
+        CGEventPost(kCGHIDEventTap, theEvent)
+
+def mousemove(posx,posy):
+        mouseEvent(kCGEventMouseMoved, posx,posy);
+
+def mouseclick(posx,posy):
+        # uncomment this line if you want to force the mouse 
+        # to MOVE to the click location first (I found it was not necessary).
+        mouseEvent(kCGEventMouseMoved, posx,posy);
+        mouseEvent(kCGEventLeftMouseDown, posx,posy);
+        mouseEvent(kCGEventLeftMouseUp, posx,posy);
+        
+def mousedown(posx, posy):
+    mouseEvent(kCGEventMouseMoved, posx,posy);
+    mouseEvent(kCGEventLeftMouseDown, posx,posy);
+def mouseup(posx, posy):
+    mouseEvent(kCGEventMouseMoved, posx,posy);
+    mouseEvent(kCGEventLeftMouseUp, posx,posy);
+    
+'''
+x = (-200, 200)
+y = (100, 340)
+z = 0
+'''        
+
+scale = 3.75
+xconst = 750
+yconst = 1375
+
+
+def distance(x1, y1, z1, x2, y2, z2):
+    return sqrt(pow((x1-x2),2)+pow((y1-y2),2)+pow((z1-z2),2))
 
 
 class SampleListener(Leap.Listener):
+
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
-
     def on_init(self, controller):
         print "Initialized"
 
@@ -35,61 +78,52 @@ class SampleListener(Leap.Listener):
         print "Exited"
 
     def on_frame(self, controller):
+        global canClick
         # Get the most recent frame and report some basic information
         frame = controller.frame()
 
-        if len(frame.gestures())>0:
-            print "Frame id: %d, gestures: %d" % (frame.id, len(frame.gestures()))
-        #      frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
-        #
-        # # Get hands
-        # for hand in frame.hands:
-        #
-        #     handType = "Left hand" if hand.is_left else "Right hand"
-        #
-        #     print "  %s, id %d, position: %s" % (
-        #         handType, hand.id, hand.palm_position)
-        #
-        #     # Get the hand's normal vector and direction
-        #     normal = hand.palm_normal
-        #     direction = hand.direction
-        #
-        #     # Calculate the hand's pitch, roll, and yaw angles
-        #     print "  pitch: %f degrees, roll: %f degrees, yaw: %f degrees" % (
-        #         direction.pitch * Leap.RAD_TO_DEG,
-        #         normal.roll * Leap.RAD_TO_DEG,
-        #         direction.yaw * Leap.RAD_TO_DEG)
-        #
-        #     # Get arm bone
-        #     arm = hand.arm
-        #     print "  Arm direction: %s, wrist position: %s, elbow position: %s" % (
-        #         arm.direction,
-        #         arm.wrist_position,
-        #         arm.elbow_position)
-        #
-        #     # Get fingers
-        #     for finger in hand.fingers:
-        #
-        #         print "    %s finger, id: %d, length: %fmm, width: %fmm" % (
-        #             self.finger_names[finger.type],
-        #             finger.id,
-        #             finger.length,
-        #             finger.width)
-        #
-        #         # Get bones
-        #         for b in range(0, 4):
-        #             bone = finger.bone(b)
-        #             print "      Bone: %s, start: %s, end: %s, direction: %s" % (
-        #                 self.bone_names[bone.type],
-        #                 bone.prev_joint,
-        #                 bone.next_joint,
-        #                 bone.direction)
-        #
-        # # Get tools
-        # for tool in frame.tools:
-        #
-        #     print "  Tool id: %d, position: %s, direction: %s" % (
-        #         tool.id, tool.tip_position, tool.direction)
+        # print "Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
+#               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures()))
+
+        # Get hands
+        for hand in frame.hands:
+
+            handType = "Left hand" if hand.is_left else "Right hand"
+
+            print "  %s, id %d, position: x=%f y=%f z=%f" % (
+                handType, hand.id, hand.palm_position[0], hand.palm_position[1], hand.palm_position[2])
+            if handType == "Right hand":
+                mousemove((xconst+(scale*hand.palm_position[0])),(yconst-(scale*hand.palm_position[1])))
+
+            # Get the hand's normal vector and direction
+            normal = hand.palm_normal
+            direction = hand.direction
+
+            # Get fingers
+            if hand.is_right:
+                clicky = ["Index", "Thumb"]
+                clickFingers = [finger for finger in hand.fingers if self.finger_names[finger.type] in clicky]
+            
+                if len(clickFingers) == 2:
+                    x1 = clickFingers[0].tip_position[0]
+                    y1 = clickFingers[0].tip_position[1]
+                    z1 = clickFingers[0].tip_position[2]
+
+                    x2 = clickFingers[1].tip_position[0]
+                    y2 = clickFingers[1].tip_position[1]
+                    z2 = clickFingers[1].tip_position[2]
+                    
+                        
+                    if distance(x1, y1, z1, x2, y2, z2) < 20:
+                        mousedown((xconst+(scale*hand.palm_position[0])),(yconst-(scale*hand.palm_position[1])))
+                    if distance(x1, y1, z1, x2, y2, z2) > 20:
+                        mouseup((xconst+(scale*hand.palm_position[0])),(yconst-(scale*hand.palm_position[1])))
+
+        # Get tools
+        for tool in frame.tools:
+
+            print "  Tool id: %d, position: %s, direction: %s" % (
+                tool.id, tool.tip_position, tool.direction)
 
         # Get gestures
         for gesture in frame.gestures():
@@ -147,10 +181,13 @@ class SampleListener(Leap.Listener):
             return "STATE_INVALID"
 
 def main():
+    global canClick
     # Create a sample listener and controller
     listener = SampleListener()
     controller = Leap.Controller()
-
+    controller.set_policy(Leap.Controller.POLICY_BACKGROUND_FRAMES)
+    controller.set_policy(Leap.Controller.POLICY_IMAGES)
+    controller.set_policy(Leap.Controller.POLICY_OPTIMIZE_HMD)
     # Have the sample listener receive events from the controller
     controller.add_listener(listener)
 
