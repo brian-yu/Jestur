@@ -1,4 +1,5 @@
 import Leap, sys, thread, time
+
 from Quartz.CoreGraphics import CGEventCreateMouseEvent
 from Quartz.CoreGraphics import CGEventPost
 from Quartz.CoreGraphics import kCGEventMouseMoved
@@ -11,6 +12,8 @@ from Quartz.CoreGraphics import kCGMouseButtonRight
 from Quartz.CoreGraphics import kCGHIDEventTap
 
 from math import sqrt, pow
+
+from appscript import app, k
 
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 canClick = True
@@ -170,33 +173,45 @@ class SampleListener(Leap.Listener):
                 tool.id, tool.tip_position, tool.direction)
 
         # Get gestures
-        # for gesture in frame.gestures():
-#             if gesture.type == Leap.Gesture.TYPE_CIRCLE:
-#                 circle = CircleGesture(gesture)
-#
-#                 # Determine clock direction using the angle between the pointable and the circle normal
-#                 if circle.pointable.direction.angle_to(circle.normal) <= Leap.PI/2:
-#                     clockwiseness = "clockwise"
-#                 else:
-#                     clockwiseness = "counterclockwise"
-#
-#                 # Calculate the angle swept since the last frame
-#                 swept_angle = 0
-#                 if circle.state != Leap.Gesture.STATE_START:
-#                     previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
-#                     swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
-#
-#                 print "  Circle id: %d, %s, progress: %f, radius: %f, angle: %f degrees, %s" % (
-#                         gesture.id, self.state_names[gesture.state],
-#                         circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness)
-#
-#             if gesture.type == Leap.Gesture.TYPE_SWIPE:
-#                 swipe = SwipeGesture(gesture)
-#                 print "  Swipe id: %d, state: %s, position: %s, direction: %s, speed: %f" % (
-#                         gesture.id, self.state_names[gesture.state],
-#                         swipe.position, swipe.direction, swipe.speed)
-#
-#             if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
+        for gesture in frame.gestures():
+            if gesture.type == Leap.Gesture.TYPE_CIRCLE:
+                circle = CircleGesture(gesture)
+
+                # Determine clock direction using the angle between the pointable and the circle normal
+                if circle.pointable.direction.angle_to(circle.normal) <= Leap.PI/2:
+                    clockwiseness = "clockwise"
+                    if circle.radius > 50:
+                        app('System Events').keystroke('w', using=k.command_down)
+                else:
+                    clockwiseness = "counterclockwise"
+                    if circle.radius > 50:
+                        app('System Events').keystroke('m', using=k.command_down)
+
+                # Calculate the angle swept since the last frame
+                swept_angle = 0
+                if circle.state != Leap.Gesture.STATE_START:
+                    previous_update = CircleGesture(controller.frame(1).gesture(circle.id))
+                    swept_angle =  (circle.progress - previous_update.progress) * 2 * Leap.PI
+
+                print "  Circle id: %d, %s, progress: %f, radius: %f, angle: %f degrees, %s" % (
+                        gesture.id, self.state_names[gesture.state],
+                        circle.progress, circle.radius, swept_angle * Leap.RAD_TO_DEG, clockwiseness)
+
+            if gesture.type == Leap.Gesture.TYPE_SWIPE:
+                swipe = SwipeGesture(gesture)
+                print "  Swipe id: %d, state: %s, position: %s, direction: %s, speed: %f" % (
+                        gesture.id, self.state_names[gesture.state],
+                        swipe.position, swipe.direction, swipe.speed)
+                if swipe.direction[1] > 0: #and abs(swipe.direction[0]) < 0.5 and abs(swipe.direction[2]) < 0.5:              
+                    app('System Events').key_code(126)
+                    app('System Events').key_code(126)
+                    app('System Events').key_code(126)
+                if swipe.direction[1] < 0: #and abs(swipe.direction[0]) < 0.5 and abs(swipe.direction[2]) < 0.5:
+                    app('System Events').key_code(125)
+                    app('System Events').key_code(125)
+                    app('System Events').key_code(125)
+
+            # if gesture.type == Leap.Gesture.TYPE_KEY_TAP:
 #                 keytap = KeyTapGesture(gesture)
 #                 print "  Key Tap id: %d, %s, position: %s, direction: %s" % (
 #                         gesture.id, self.state_names[gesture.state],
