@@ -1,5 +1,7 @@
 Jestur
 ==========
+http://devpost.com/software/jestur
+
 Dependencies
 -------------
 Quarts Coregraphics must be installed and you must be running Mac OSX.
