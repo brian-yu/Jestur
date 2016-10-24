@@ -25,12 +25,12 @@ Run Jestur
 
 Gestures
 ---------
-Index and thumb pinch 	- left click
-Pinky and thumb pinch 	- right click
-Swipe down 		- scroll down
-Swipe up 		- scroll up
-Counterclockwise circle	- minimize window
-Clockwise circle	- close window
+* Index and thumb pinch 	- left click
+* Pinky and thumb pinch 	- right click
+* Swipe down 		- scroll down
+* Swipe up 		- scroll up
+* Counterclockwise circle	- minimize window
+* Clockwise circle	- close window
 
 
 
